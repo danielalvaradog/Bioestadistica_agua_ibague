@@ -4,7 +4,7 @@ Análisis Exploratorio de Datos (EDA) sobre la calidad del agua del municipio de
 
 ## Descripción
 
-Este proyecto realiza un análisis estadístico completo de los parámetros fisicoquímicos y microbiológicos del agua potable en Ibagué. Los datos provienen del portal [Datos Abiertos Colombia](https://www.datos.gov.co/Vivienda-Ciudad-y-Territorio/CALIDAD-DE-AGUA/syfm-bqhq/about_data).
+Este proyecto realiza un análisis estadístico de los parámetros fisicoquímicos y microbiológicos del agua potable en Ibagué. Los datos provienen del portal [Datos Abiertos Colombia](https://www.datos.gov.co/Vivienda-Ciudad-y-Territorio/CALIDAD-DE-AGUA/syfm-bqhq/about_data).
 
 ## Variables Analizadas
 
