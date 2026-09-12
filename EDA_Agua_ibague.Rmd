@@ -1,0 +1,305 @@
+---
+title: "Propuesta de Proyecto - Bioestadística - Calidad del Agua Ibagué (IBAL)"
+author: "Daniel Alvarado - 145310"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    theme: flatly
+    highlight: tango
+  pdf_document:
+    toc: true
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, 
+  warning = FALSE, 
+  message = FALSE, 
+  fig.width = 7,       
+  fig.height = 4.5,
+  dpi = 100 
+)
+
+source("src/Functions_agua.R")
+
+```
+
+# Introducción y Objetivos
+
+Este documento presenta un Análisis Exploratorio de Datos (EDA) sobre el conjunto de datos de Calidad del Agua del municipio de Ibagué, proveído por la Empresa Ibaguereña de Acueducto y Alcantarillado (IBAL) a través del portal Datos Abiertos Colombia (<https://www.datos.gov.co/Vivienda-Ciudad-y-Territorio/CALIDAD-DE-AGUA/syfm-bqhq/about_data>). El objetivo es caracterizar la calidad del agua analizada evaluando variables físicas, químicas y microbiológicas según las mediciones realizadas.
+
+## Variables seleccionadas para el análisis
+
+Para este análisis se seleccionaron variables reales extraídas directamente de las 28 columnas de la base de datos (reemplazando nombre_del_laboratorio por componentes temporales año y mes debido a que presentaba valor constante IBAL):
+
+- anio (año) / mes (Cualitativas/Temporales): Año y mes derivados de la fecha de medición.
+- nuqfus_fct (Cualitativa/Factor): Número Único de Identificación del Punto de Muestreo.
+- ph (Continua): Potencial de Hidrógeno (escala de 0 a 14).
+- temperatura (Continua): Temperatura registrada en la muestra (°C).
+- turbiedad (Continua): Medida de opacidad o claridad del agua en UNT.
+- color_real (Continua): Unidades de Color Real (Pt-Co).
+- conductividad (Continua): Capacidad para conducir electricidad ($\mu S/cm$).
+- oxigeno_disuelto (Continua): Concentración de oxígeno disuelto ($mg/L$).
+- cloruros (Continua): Concentración de cloruros ($mg/L$).
+- dureza (Continua): Dureza total ($mg/L\ CaCO_3$).
+- coliformes_totales (Discreta): Conteo microbiológico de coliformes totales (NMP/100 mL).
+- e_coli (Discreta): Conteo microbiológico de E. coli (NMP/100 mL).
+
+# Carga y preparación de los datos
+
+Se carga el conjunto de datos desde el archivo CSV *CALIDAD_DE_AGUA.csv* y aplicamos las transformaciones necesarias mediante la función *prepare_water_data()*.
+
+```{r}
+# Carga del dataset
+raw_data <- read.csv("data/CALIDAD_DE_AGUA.csv", stringsAsFactors = FALSE)
+
+
+# Preparación y factorización de variables
+df <- prepare_water_data(raw_data)
+
+# Estructura general de las variables seleccionadas
+glimpse(df)
+
+```
+
+# Análisis Univariado
+
+## Variables Cualitativas
+
+### Año de medición
+
+```{r}
+plot_univariate_cuali(df, "anio", "Año de Medición")
+```
+
+### Mes de medición
+
+```{r}
+plot_univariate_cuali(df, "mes", "Mes de Medición")
+```
+
+### Punto de muestreo (NUQFUS)
+
+```{r}
+plot_univariate_cuali(df, "nuqfus_fct", "Punto de Muestreo (NUQFUS)")
+```
+
+## Variables Cuantitativas
+
+Se analiza la distribución empírica de cada variable mediante histogramas, curvas de densidad, diagramas de caja (boxplots) para la detección de valores atípicos y tablas resumen con estadísticos descriptivos.
+
+```{r}
+plot_univariate_cuanti(df, "ph", "pH", unit = "unidades")
+summary_cuanti_table(df, "ph", "pH") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Temperatura
+
+```{r}
+plot_univariate_cuanti(df, "temperatura", "Temperatura", unit = "°C")
+summary_cuanti_table(df, "temperatura", "Temperatura (°C)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Turbiedad
+
+Fue necesario aplicar una escala logaritmica a la turbiedad debido a los eventos de lluvia (extremo sesgo a la derecha)
+
+```{r}
+plot_univariate_cuanti(df, "turbiedad", "Turbiedad", unit = "UNT", log_scale = FALSE)
+plot_univariate_cuanti(df, "turbiedad", "Turbiedad", unit = "UNT", log_scale = TRUE)
+summary_cuanti_table(df, "turbiedad", "Turbiedad (UNT)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Color Real
+
+```{r}
+plot_univariate_cuanti(df, "color_real", "Color Real", unit = "UPC", log_scale = TRUE)
+summary_cuanti_table(df, "color_real", "Color Real (UPC)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Conductividad
+
+```{r}
+plot_univariate_cuanti(df, "conductividad", "Conductividad", unit = "µS/cm")
+summary_cuanti_table(df, "conductividad", "Conductividad (µS/cm)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Oxígeno disuelto
+
+```{r}
+plot_univariate_cuanti(df, "oxigeno_disuelto", "Oxígeno Disuelto", unit = "mg/L")
+summary_cuanti_table(df, "oxigeno_disuelto", "Oxígeno Disuelto (mg/L)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+**Analisis particular - Oxígeno Disuelto** Al analizar el comportamiento de la variable se ven dos grupos distintos que están: el primero al rededor de 5 y 10 mg/L y el segundo al rededor de los 100mg/L. Desde el punto de vista fisicoquímico, la solubilidad máxima del oxígeno en agua a presión atmosférica estándar rara vez supera los $14\text{ mg/L}$ en dado caso, es posible ver que los valores del segundo grupo corresponde es a un error en la toma o transcripción de los datos donde se utilizó el porcentaje de saturación en vez de la concentración.
+
+Para evitar sesgar las medidas, se reemplazan por NA las observaciones que son físicamente imposibles
+
+```{r}
+# Corrección de artefacto por confusión de unidades (% SAT vs mg/L)
+df <- df %>%
+  mutate(oxigeno_disuelto = ifelse(oxigeno_disuelto > 20, NA_real_, oxigeno_disuelto))
+
+# Re-visualización del parámetro limpio
+plot_univariate_cuanti(df, "oxigeno_disuelto", "Oxígeno Disuelto (Corregido)", unit = "mg/L")
+summary_cuanti_table(df, "oxigeno_disuelto", "Oxígeno Disuelto Corregido (mg/L)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Cloruros
+
+```{r}
+plot_univariate_cuanti(df, "cloruros", "Cloruros", unit = "mg/L")
+summary_cuanti_table(df, "cloruros", "Cloruros (mg/L)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Dureza total
+
+```{r}
+plot_univariate_cuanti(df, "dureza", "Dureza Total", unit = "mg/L CaCO3")
+summary_cuanti_table(df, "dureza", "Dureza Total (mg/L CaCO3)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### Coliformes totales
+
+```{r}
+plot_univariate_cuanti(df, "coliformes_totales", "Coliformes Totales", unit = "NMP/100 mL", log_scale = TRUE)
+summary_cuanti_table(df, "coliformes_totales", "Coliformes Totales (NMP/100 mL)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+### E. Coli
+
+```{r}
+plot_univariate_cuanti(df, "e_coli", "E. coli", unit = "NMP/100 mL", log_scale = TRUE)
+summary_cuanti_table(df, "e_coli", "E. coli (NMP/100 mL)") %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+# Análisis Bivariado
+
+## Turbiedad y E. Coli por punto de muestreo
+
+### Turbiedad
+
+```{r}
+plot_cuali_cuanti(
+  df, 
+  var_cuali = "nuqfus_fct", 
+  var_cuanti = "turbiedad", 
+  label_cuali = "Punto de Muestreo (NUQFUS)", 
+  label_cuanti = "Turbiedad (UNT)", 
+  log_scale = TRUE
+)
+```
+
+### E. Coli
+
+```{r}
+plot_cuali_cuanti(
+  df, 
+  var_cuali = "nuqfus_fct", 
+  var_cuanti = "e_coli", 
+  label_cuali = "Punto de Muestreo (NUQFUS)", 
+  label_cuanti = "E. coli (NMP/100 mL)", 
+  log_scale = TRUE
+)
+```
+
+## Comportamiento mensual Turbiedad y E. Coli
+
+```{r}
+plot_cuali_cuanti(
+  df, 
+  var_cuali = "mes", 
+  var_cuanti = "turbiedad", 
+  label_cuali = "Mes de Medición", 
+  label_cuanti = "Turbiedad (UNT)", 
+  log_scale = TRUE
+)
+
+plot_cuali_cuanti(
+  df, 
+  var_cuali = "mes", 
+  var_cuanti = "coliformes_totales", 
+  label_cuali = "Mes de Medición", 
+  label_cuanti = "Coliformes Totales", 
+  log_scale = TRUE
+)
+```
+
+
+
+## Relación entre parámetros físicos y biológicos
+
+### Turbiedad - E. Coli
+
+```{r}
+plot_cuanti_cuanti(
+  df, 
+  var1 = "turbiedad", 
+  var2 = "e_coli", 
+  label1 = "Turbiedad (UNT)", 
+  label2 = "E. coli (NMP/100 mL)", 
+  log_x = TRUE, 
+  log_y = TRUE
+)
+```
+
+### Conductividad - Dureza Total
+
+```{r}
+plot_cuanti_cuanti(
+  df, 
+  var1 = "dureza", 
+  var2 = "conductividad", 
+  label1 = "Dureza Total (mg/L CaCO3)", 
+  label2 = "Conductividad (µS/cm)"
+)
+```
+
+## Matriz de Correlación
+
+Para identificar relaciones lineales generales se hace la matriz de correlación lineal de Pearson.
+
+```{r}
+
+# Matriz de correlación con variables continuas transformadas a log10 cuando aplica
+cor_matrix <- plot_pearson_correlation(
+  df, 
+  vars_cuanti = c("ph", "temperatura", "turbiedad", "color_real", 
+                  "conductividad", "oxigeno_disuelto", "cloruros", "dureza"), 
+  use_log = TRUE
+)
+
+cor_matrix <- plot_pearson_correlation(
+  df, 
+  vars_cuanti = c("ph", "temperatura", "turbiedad", "color_real", 
+                  "conductividad", "oxigeno_disuelto", "cloruros", "dureza"), 
+  use_log = FALSE
+)
+```
+
